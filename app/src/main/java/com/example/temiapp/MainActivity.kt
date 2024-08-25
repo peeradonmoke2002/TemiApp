@@ -15,13 +15,14 @@ import com.robotemi.sdk.listeners.OnRobotReadyListener
 import kotlinx.coroutines.*
 import android.widget.VideoView
 
+
 class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
     private lateinit var robot: Robot
     private lateinit var locationManager: LocationManager
     private lateinit var temiStatusHandler: TemiStatusHandler
     private lateinit var rabbitMqManager: RabbitMqManager
-
+    // rabittMQ configuration //
     private val rabbitMqHost = "10.62.31.238"
     private val rabbitMqPort = 5672
     private val rabbitMqUsername = "admin"
