@@ -37,18 +37,6 @@
         app:layout_constraintWidth_percent="0.8"
         android:layout_marginTop="32dp"/>
 
-    <TextView
-        android:id="@+id/txtHomePosition"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Home Position:"
-        android:textSize="18sp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/btnGoHome"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="8dp"/>
-
     <Button
         android:id="@+id/btnGoPositionA"
         android:layout_width="0dp"
@@ -58,23 +46,11 @@
         android:padding="24dp"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/orange_500"
-        app:layout_constraintTop_toBottomOf="@id/txtHomePosition"
+        app:layout_constraintTop_toBottomOf="@id/btnGoHome"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintWidth_percent="0.8"
         android:layout_marginTop="32dp"/>
-
-    <TextView
-        android:id="@+id/txtPositionA"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Position A:"
-        android:textSize="18sp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/btnGoPositionA"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="8dp"/>
 
     <Button
         android:id="@+id/btnGoPositionB"
@@ -85,22 +61,18 @@
         android:padding="24dp"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/red_500"
-        app:layout_constraintTop_toBottomOf="@id/txtPositionA"
+        app:layout_constraintTop_toBottomOf="@id/btnGoPositionA"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintWidth_percent="0.8"
         android:layout_marginTop="32dp"/>
 
-    <TextView
-        android:id="@+id/txtPositionB"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Position B:"
-        android:textSize="18sp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/btnGoPositionB"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="8dp"/>
+    <VideoView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" /> <!-- Initially hidden -->
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

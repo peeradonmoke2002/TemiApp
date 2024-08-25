@@ -1,49 +1,52 @@
 package com.example.temiapp
 
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.View
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.util.Log
-import android.widget.Button
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import com.robotemi.sdk.Robot
+import com.robotemi.sdk.*
 import com.robotemi.sdk.listeners.OnRobotReadyListener
-import com.robotemi.sdk.listeners.OnGoToLocationStatusChangedListener
-import com.robotemi.sdk.listeners.OnLocationsUpdatedListener
-import com.robotemi.sdk.TtsRequest
+import kotlinx.coroutines.*
+import android.widget.VideoView
 
-class MainActivity : AppCompatActivity(), OnRobotReadyListener, OnGoToLocationStatusChangedListener {
+class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
     private lateinit var robot: Robot
-    private lateinit var btnGoHome: Button
-    private lateinit var btnGoPositionA: Button
-    private lateinit var btnGoPositionB: Button
-    private lateinit var txtHomePosition: TextView
-    private lateinit var txtPositionA: TextView
-    private lateinit var txtPositionB: TextView
+    private lateinit var locationManager: LocationManager
+    private lateinit var temiStatusHandler: TemiStatusHandler
+    private lateinit var rabbitMqManager: RabbitMqManager
+
+    private val rabbitMqHost = "10.62.31.238"
+    private val rabbitMqPort = 5672
+    private val rabbitMqUsername = "admin"
+    private val rabbitMqPassword = "123456"
+    private val rabbitMqQueueName = "temi_control_queue"
+
+
+    private lateinit var videoView: VideoView
+    private val inactivityTimeout: Long = 60000 // 1 minute
+    private val handler = Handler(Looper.getMainLooper())
+    private val inactivityRunnable = Runnable { playInactivityVideo() }
+
+    private var x = 0f
+    private var y = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setupButtons()
+        videoView = findViewById(R.id.videoView)
+        videoView.setVideoPath("android.resource://" + packageName + "/" + R.raw.poomjaibot_eye_face)
 
-        // Initialize the Temi Robot instance
         robot = Robot.getInstance()
-
-        // Initialize UI elements
-        btnGoHome = findViewById(R.id.btnGoHome)
-        btnGoPositionA = findViewById(R.id.btnGoPositionA)
-        btnGoPositionB = findViewById(R.id.btnGoPositionB)
-        txtHomePosition = findViewById(R.id.txtHomePosition)
-        txtPositionA = findViewById(R.id.txtPositionA)
-        txtPositionB = findViewById(R.id.txtPositionB)
-
-        // Initially disable the buttons
-        btnGoHome.isEnabled = false
-        btnGoPositionA.isEnabled = false
-        btnGoPositionB.isEnabled = false
+        temiStatusHandler = TemiStatusHandler(robot)
+        locationManager = LocationManager(robot, this)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -51,88 +54,112 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener, OnGoToLocationSt
             insets
         }
 
+        rabbitMqManager = RabbitMqManager(
+            host = rabbitMqHost,
+            port = rabbitMqPort,
+            username = rabbitMqUsername,
+            password = rabbitMqPassword,
+            queueName = rabbitMqQueueName
+        )
+
+        rabbitMqManager.setMessageHandler(object : RabbitMqManager.MessageHandler {
+            override fun onMessageReceived(message: String) {
+                handleRabbitMqMessage(message)
+            }
+        })
+
+        rabbitMqManager.connect()
+
+
+
+    }
+
+    private fun setupButtons() {
         findViewById<Button>(R.id.btnSavePosition).setOnClickListener {
-            showSavePositionDialog()
+            locationManager.showSavePositionDialog()
         }
 
-        btnGoHome.setOnClickListener {
-            goToLocation("home")
+        findViewById<Button>(R.id.btnGoHome).setOnClickListener {
+            locationManager.goToLocation("Temi-home")
         }
 
-        btnGoPositionA.setOnClickListener {
-            goToLocation("Position A")
+        findViewById<Button>(R.id.btnGoPositionA).setOnClickListener {
+            locationManager.goToLocation("Position a")
         }
 
-        btnGoPositionB.setOnClickListener {
-            goToLocation("Position B")
+        findViewById<Button>(R.id.btnGoPositionB).setOnClickListener {
+            locationManager.goToLocation("Position b")
         }
+    }
 
-        // Register listeners
-        robot.addOnGoToLocationStatusChangedListener(this)
+    override fun onStart() {
+        super.onStart()
+        robot.addOnRobotReadyListener(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        robot.removeOnRobotReadyListener(this)
+        temiStatusHandler.cleanUp()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        rabbitMqManager.disconnect()
     }
 
     override fun onRobotReady(isReady: Boolean) {
         if (isReady) {
-            // Robot is ready, you can interact with it
-            robot.speak(TtsRequest.create("Hello, I am ready!", false))
+            try {
+                val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)
+                robot.onStart(activityInfo)
+                robot.speak(TtsRequest.create("Temi is ready", false))
+            } catch (e: PackageManager.NameNotFoundException) {
+                throw RuntimeException(e)
+            }
         }
     }
 
-    private fun showSavePositionDialog() {
-        val options = arrayOf("Save as Home", "Save as Position A", "Save as Position B")
-        val checkedItem = -1  // No item selected by default
-
-        AlertDialog.Builder(this)
-            .setTitle("Select where to save the position")
-            .setSingleChoiceItems(options, checkedItem) { dialog, which ->
-                when (which) {
-                    0 -> savePosition("home")
-                    1 -> savePosition("Position A")
-                    2 -> savePosition("Position B")
+    private fun handleRabbitMqMessage(message: String) {
+        val handler = Handler(Looper.getMainLooper())
+        handler.post {
+            when (message) {
+                "X", "Z", "C" -> {
+                    robot.stopMovement()
+                    return@post
                 }
-                dialog.dismiss()  // Dismiss the dialog after a choice is made
+                "W_DOWN" -> x = if (y != 0f) 0.5f else 0.6f
+                "S_DOWN" -> x = if (y != 0f) -0.4f else -0.6f
+                "A_DOWN" -> y = if (x < 0) -1f else 1f
+                "D_DOWN" -> y = if (x < 0) 1f else -1f
+                "W_UP", "S_UP" -> x = 0f
+                "A_UP", "D_UP" -> y = 0f
             }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun savePosition(locationName: String) {
-        // Save the current location with the specified name
-        robot.saveLocation(locationName)
-
-        // Assuming X and Y coordinates are associated with the name, you can update the UI
-        when (locationName) {
-            "home" -> {
-                txtHomePosition.text = "Home Position Saved"
-                txtHomePosition.visibility = View.VISIBLE
-                btnGoHome.isEnabled = true
-            }
-            "Position A" -> {
-                txtPositionA.text = "Position A Saved"
-                txtPositionA.visibility = View.VISIBLE
-                btnGoPositionA.isEnabled = true
-            }
-            "Position B" -> {
-                txtPositionB.text = "Position B Saved"
-                txtPositionB.visibility = View.VISIBLE
-                btnGoPositionB.isEnabled = true
-            }
+            robot.skidJoy(x, y, true)
+            handler.postDelayed({}, 500)
         }
-
-        // Show confirmation dialog
-        AlertDialog.Builder(this)
-            .setTitle("Position Saved")
-            .setMessage("Location '$locationName' has been saved.")
-            .setPositiveButton("OK", null)
-            .show()
     }
 
-    private fun goToLocation(location: String) {
-        robot.goTo(location)
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        resetInactivityTimer() // Reset the timer on any user interaction
     }
 
-    override fun onGoToLocationStatusChanged(location: String, status: String, descriptionId: Int, description: String) {
-        Log.d("TemiApp", "Location: $location, Status: $status")
-        // You can update UI based on the status, like showing a message when the robot reaches the location
+    private fun resetInactivityTimer() {
+        handler.removeCallbacks(inactivityRunnable)
+        handler.postDelayed(inactivityRunnable, inactivityTimeout)
+    }
+
+    private fun playInactivityVideo() {
+        videoView.visibility = View.VISIBLE
+        videoView.start()
+        videoView.setOnCompletionListener { videoView.start() } // Loop the video
+    }
+
+    private fun stopInactivityVideo() {
+        if (videoView.isPlaying) {
+            videoView.stopPlayback()
+            videoView.visibility = View.GONE
+        }
     }
 }

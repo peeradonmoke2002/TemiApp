@@ -46,5 +46,5 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.robotemi:sdk:1.131.4")
-
+    implementation("com.rabbitmq:amqp-client:5.9.0")
 }
