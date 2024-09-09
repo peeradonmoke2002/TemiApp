@@ -7,72 +7,15 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btnSavePosition"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Save Position"
-        android:textSize="24sp"
-        android:padding="24dp"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/blue_500"
-        app:layout_constraintTop_toTopOf="parent"
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="678dp"
+        android:layout_height="249dp"
+        android:text="Ready to Move!"
+        android:textSize="100sp"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        android:layout_marginTop="32dp"/>
-
-    <Button
-        android:id="@+id/btnGoHome"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Go Home"
-        android:textSize="24sp"
-        android:padding="24dp"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/green_500"
-        app:layout_constraintTop_toBottomOf="@id/btnSavePosition"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        android:layout_marginTop="32dp"/>
-
-    <Button
-        android:id="@+id/btnGoPositionA"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Go to Position A"
-        android:textSize="24sp"
-        android:padding="24dp"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/orange_500"
-        app:layout_constraintTop_toBottomOf="@id/btnGoHome"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        android:layout_marginTop="32dp"/>
-
-    <Button
-        android:id="@+id/btnGoPositionB"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Go to Position B"
-        android:textSize="24sp"
-        android:padding="24dp"
-        android:textColor="@android:color/white"
-        android:backgroundTint="@color/red_500"
-        app:layout_constraintTop_toBottomOf="@id/btnGoPositionA"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        android:layout_marginTop="32dp"/>
-
-    <VideoView
-        android:id="@+id/videoView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone" /> <!-- Initially hidden -->
-
-
-
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
