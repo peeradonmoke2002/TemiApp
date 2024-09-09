@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TemiApp</string>
+    <string name="ready_to_move">Ready to Move!</string>
 </resources>
