@@ -3,8 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools">
 
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,9 +24,9 @@
         android:theme="@style/Theme.TemiApp"
         tools:targetApi="31">
 
-        <meta-data
-            android:name="com.robotemi.sdk.metadata.SKILL"
-            android:value="TemiApp" />
+<!--        <meta-data-->
+<!--            android:name="com.robotemi.sdk.metadata.SKILL"-->
+<!--            android:value="TemiApp" />-->
 
         <activity
             android:name=".MainActivity"

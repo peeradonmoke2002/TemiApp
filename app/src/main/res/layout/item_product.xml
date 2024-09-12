@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- First Product -->
+    <ImageView
+        android:id="@+id/product_image1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/product_image2"
+        app:layout_constraintBottom_toTopOf="@id/product_name1"
+        app:layout_constraintWidth_percent="0.3"
+        app:layout_constraintHeight_percent="0.5"/>
+
+    <TextView
+        android:id="@+id/product_name1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Bread"
+        android:textSize="48sp"
+        app:layout_constraintBottom_toTopOf="@id/button1"
+        app:layout_constraintEnd_toEndOf="@id/product_image1"
+        app:layout_constraintStart_toStartOf="@id/product_image1"
+        app:layout_constraintTop_toBottomOf="@id/product_image1" />
+
+    <TextView
+        android:id="@+id/product_price1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="35.0 Bath"
+        android:textSize="48sp"
+        app:layout_constraintEnd_toEndOf="@id/product_image1"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@id/product_image1"
+        app:layout_constraintTop_toBottomOf="@id/product_name1" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="0dp"
+        android:layout_height="73dp"
+        android:backgroundTint="@color/purple_500"
+        android:text="PURCHASE"
+        android:textSize="48sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/product_image1"
+        app:layout_constraintStart_toStartOf="@id/product_image1"
+        app:layout_constraintTop_toBottomOf="@id/product_price1" />
+
+    <!-- Second Product -->
+    <ImageView
+        android:id="@+id/product_image2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintStart_toEndOf="@id/product_image1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/product_image3"
+        app:layout_constraintBottom_toTopOf="@id/product_name2"
+        app:layout_constraintWidth_percent="0.3" />
+
+    <TextView
+        android:id="@+id/product_name2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Bread"
+        android:textSize="48sp"
+        app:layout_constraintBottom_toTopOf="@id/button2"
+        app:layout_constraintEnd_toEndOf="@id/product_image2"
+        app:layout_constraintStart_toStartOf="@id/product_image2"
+        app:layout_constraintTop_toBottomOf="@id/product_image2" />
+
+    <TextView
+        android:id="@+id/product_price2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="35.0 Bath"
+        android:textSize="48sp"
+        app:layout_constraintEnd_toEndOf="@id/product_image2"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@id/product_image2"
+        app:layout_constraintTop_toBottomOf="@id/product_name2" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="0dp"
+        android:layout_height="73dp"
+        android:backgroundTint="@color/purple_500"
+        android:text="PURCHASE"
+        android:textSize="48sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/product_image2"
+        app:layout_constraintStart_toStartOf="@id/product_image2"
+        app:layout_constraintTop_toBottomOf="@id/product_price2" />
+
+    <!-- Third Product -->
+    <ImageView
+        android:id="@+id/product_image3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintStart_toEndOf="@id/product_image2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/product_name3"
+        app:layout_constraintWidth_percent="0.3" />
+
+    <TextView
+        android:id="@+id/product_name3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Bread"
+        android:textSize="48sp"
+        app:layout_constraintBottom_toTopOf="@id/button3"
+        app:layout_constraintEnd_toEndOf="@id/product_image3"
+        app:layout_constraintStart_toStartOf="@id/product_image3"
+        app:layout_constraintTop_toBottomOf="@id/product_image3" />
+
+    <TextView
+        android:id="@+id/product_price3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="35.0 Bath"
+        android:textSize="48sp"
+        app:layout_constraintEnd_toEndOf="@id/product_image3"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@id/product_image3"
+        app:layout_constraintTop_toBottomOf="@id/product_name3" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="0dp"
+        android:layout_height="73dp"
+        android:backgroundTint="@color/purple_500"
+        android:text="PURCHASE"
+        android:textSize="48sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/product_image3"
+        app:layout_constraintStart_toStartOf="@id/product_image3"
+        app:layout_constraintTop_toBottomOf="@id/product_price3" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
