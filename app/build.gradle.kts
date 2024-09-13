@@ -17,6 +17,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    viewBinding {
+        enable = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -26,10 +30,12 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
@@ -53,9 +59,13 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:1.7.32")
     implementation("io.getstream:stream-webrtc-android:1.1.3")
     implementation("io.getstream:stream-webrtc-android-ui:1.1.3")
+//    implementation("org.webrtc:google-webrtc:1.0.32006")
     implementation("androidx.viewpager:viewpager:1.0.0")
     implementation("androidx.fragment:fragment:1.3.6")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // https://mvnrepository.com/artifact/com.google.android.material/material
+    runtimeOnly("com.google.android.material:material:1.11.0")
+
 }

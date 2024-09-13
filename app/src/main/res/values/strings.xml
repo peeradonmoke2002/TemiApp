@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">TemiApp</string>
     <string name="ready_to_move">Ready to Move!</string>
+    <string name="close">Close</string>
+    <string name="qr_code_image">QR Code Image</string>
+    <string name="purchase">PURCHASE</string>
+    <string name="_0_0_bath">0.0 Bath</string>
+    <string name="product3">Product3</string>
+    <string name="product2">Product2</string>
+    <string name="product1">Product1</string>
 </resources>
