@@ -16,8 +16,8 @@
         android:adjustViewBounds="true"
         android:background="#FFFFFF"
         android:contentDescription="@string/qr_code_image"
-        android:scaleType="fitXY"
-        app:layout_constraintBottom_toTopOf="@+id/buttonClose"
+
+        app:layout_constraintBottom_toTopOf="@+id/closeButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -25,7 +25,7 @@
         app:shapeAppearanceOverlay="@style/CustomShape" />
 
     <Button
-        android:id="@+id/buttonClose"
+        android:id="@+id/closeButton"
         android:layout_width="500dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"

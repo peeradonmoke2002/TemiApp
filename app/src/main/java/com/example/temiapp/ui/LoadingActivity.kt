@@ -9,14 +9,14 @@ import com.example.temiapp.R
 
 class LoadingActivity : AppCompatActivity() {
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loading)
 
-        // Optional: Add a timeout if you want to stop the loading screen after a certain time
+        // Optional: Add a timeout if you want to stop the loading screen after 5 seconds
         Handler(Looper.getMainLooper()).postDelayed({
-            // Close LoadingActivity after timeout if the API call takes too long
-            finish()
-        }, 10000) // 30 seconds timeout
+            finish() // Close LoadingActivity after 5 seconds
+        }, 2000) // Show for 5 seconds
     }
 }

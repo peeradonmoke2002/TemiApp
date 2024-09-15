@@ -1,11 +1,13 @@
 package com.example.temiapp.ui
 
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.temiapp.MainActivity
 import com.example.temiapp.R
 import com.example.temiapp.network.RetrofitClient
 import com.example.temiapp.data.ProductApi
@@ -34,7 +36,7 @@ class QRCodeActivity : AppCompatActivity() {
 
     // Correct method to handle button click for closing the activity
     fun onCloseButtonClick(view: View) {
-        finish() // This will close the activity
+        finish()
     }
 
     private fun fetchQrCode(productId: Int) {

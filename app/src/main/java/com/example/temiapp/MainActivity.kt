@@ -1,6 +1,7 @@
 package com.example.temiapp
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -14,15 +15,16 @@ import com.example.temiapp.data.Product
 import com.example.temiapp.data.ProductApi
 import com.example.temiapp.network.RetrofitClient
 import com.example.temiapp.ui.ProductPageAdapter
-import com.example.temiapp.network.WebRTCManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.app.Activity
-import android.media.projection.MediaProjection
-import android.media.projection.MediaProjectionManager
-import android.content.Context
-
+import android.os.Looper
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import com.example.temiapp.ui.ErrorActivity
+import com.example.temiapp.ui.LoadingActivity
+import com.example.temiapp.network.WebRTCManager
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,11 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var productAdapter: ProductPageAdapter
     private lateinit var webRTCManager: WebRTCManager
-    private lateinit var mediaProjectionManager: MediaProjectionManager
-    private var mediaProjection: MediaProjection? = null
-    private val SCREEN_CAPTURE_REQUEST_CODE = 1000
     // Handler and Runnable for inactivity detection
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private val inactivityTimeout: Long = 30000 // 30 seconds of inactivity timeout
 
     private val inactivityRunnable = object : Runnable {
@@ -49,13 +48,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
         // Initialize RecyclerView
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -67,21 +59,22 @@ class MainActivity : AppCompatActivity() {
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(recyclerView)
 
-        // Fetch products and update the adapter when data is available
-        fetchProductsData()
-
+        // Fetch and handle product data
+        fetchAndHandleProductsData()
         // Initialize WebRTCManager with signaling server URL
-        webRTCManager = WebRTCManager(this, "ws://192.168.1.113:8080")
+        webRTCManager = WebRTCManager(this, "ws://192.168.1.108:8080")
         webRTCManager.init()
 
-        // Start the call when appropriate (e.g., on a button click or automatically)
+        // Start the WebRTC call automatically
         webRTCManager.startCall()
 
         // Start the inactivity handler
         handler.postDelayed(inactivityRunnable, inactivityTimeout)
+
+        hideSystemBars()
     }
 
-    private fun fetchProductsData() {
+    private fun fetchProductsData(onResult: (Boolean) -> Unit) {
         val productApi = RetrofitClient.retrofit.create(ProductApi::class.java)
 
         productApi.getProductsData().enqueue(object : Callback<List<Product>> {
@@ -94,37 +87,76 @@ class MainActivity : AppCompatActivity() {
 
                     // Update the adapter with the actual paginated data
                     productAdapter.updateData(productPages)
+
+                    // Notify success
+                    onResult(true)
                 } else {
                     Log.e("MainActivity", "Failed to fetch products")
+                    onResult(false)
                 }
             }
 
             override fun onFailure(call: Call<List<Product>>, t: Throwable) {
                 Log.e("MainActivity", "API call failed", t)
+                onResult(false)
             }
         })
     }
 
-    // Request screen capture permission
-    private fun startScreenCapture() {
-        mediaProjectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
-        startActivityForResult(captureIntent, SCREEN_CAPTURE_REQUEST_CODE)
+    private fun startLoadingScreen() {
+        val intent = Intent(this, LoadingActivity::class.java)
+        startActivity(intent)
     }
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == SCREEN_CAPTURE_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                // Pass the Intent (data) to WebRTCManager to start screen sharing
-                webRTCManager.startScreenCapture(data)
+
+    private fun showErrorScreen() {
+        val intent = Intent(this, ErrorActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+        finish() // Close MainActivity
+    }
+
+    private fun fetchAndHandleProductsData() {
+        // Start the loading screen
+        startLoadingScreen()
+
+        fetchProductsData { isSuccess ->
+            // If success, stop the loading screen and proceed with normal flow
+            if (isSuccess) {
+                // Close the LoadingActivity after success (assuming LoadingActivity is on top)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    // Finish LoadingActivity (you can send a broadcast or finish it explicitly if necessary)
+                    sendBroadcast(Intent(LoadingActivity::class.java.name).apply {
+                        action = "finish_loading"
+                    })
+                }, 5000) // Optional delay for UX reasons
             } else {
-                Log.e("MainActivity", "Screen capture permission denied.")
+                // If error, show error screen and finish MainActivity
+                showErrorScreen()
             }
         }
     }
 
 
-
+    private fun hideSystemBars() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // For Android R (API level 30) and above
+            window.insetsController?.apply {
+                hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            // For older versions, use system UI flags
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    )
+        }
+    }
 
     // Reset inactivity timer on any user interaction
     override fun onUserInteraction() {

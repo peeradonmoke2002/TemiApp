@@ -1,5 +1,6 @@
 package com.example.temiapp.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -49,6 +50,7 @@ class ProductPageAdapter(
     override fun getItemCount(): Int = if (hasError || dataIsEmpty) 1 else productPages.size
 
     // Update the adapter with new data
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newPages: List<List<Product>>) {
         productPages = newPages
         notifyDataSetChanged()
@@ -168,5 +170,7 @@ class ProductPageAdapter(
             intent.putExtra("PRODUCT_ID", productId)
             context.startActivity(intent)
         }
+
+
     }
 }
