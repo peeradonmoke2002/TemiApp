@@ -67,5 +67,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     // https://mvnrepository.com/artifact/com.google.android.material/material
     runtimeOnly("com.google.android.material:material:1.11.0")
+    implementation("com.robotemi:sdk:1.131.4")
 
 }

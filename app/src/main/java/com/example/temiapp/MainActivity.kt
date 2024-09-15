@@ -1,13 +1,15 @@
 package com.example.temiapp
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -24,30 +26,54 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import com.example.temiapp.ui.ErrorActivity
 import com.example.temiapp.ui.LoadingActivity
-import com.example.temiapp.network.WebRTCManager
+import com.robotemi.sdk.Robot
+import com.robotemi.sdk.TtsRequest
+import com.robotemi.sdk.listeners.OnRobotReadyListener
+import com.example.temiapp.network.RabbitMQClient
+import com.example.temiapp.controller.RobotController
+import com.example.temiapp.network.RabbitMQService
 
-
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnRobotReadyListener  {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var productAdapter: ProductPageAdapter
-    private lateinit var webRTCManager: WebRTCManager
+    private lateinit var rabbitMQClient: RabbitMQClient
+    private lateinit var controller: RobotController
+    private lateinit var robot: Robot
+    private var rabbitMQService: RabbitMQService? = null
+    private var isBound = false
+
     // Handler and Runnable for inactivity detection
     private val handler = Handler(Looper.getMainLooper())
     private val inactivityTimeout: Long = 30000 // 30 seconds of inactivity timeout
 
-    private val inactivityRunnable = object : Runnable {
-        override fun run() {
-            // After 30 seconds of inactivity, switch back to VideoActivity
-            val intent = Intent(this@MainActivity, com.example.temiapp.ui.VideoActivity::class.java)
-            startActivity(intent)
-            finish() // Close MainActivity
+    private val inactivityRunnable = Runnable {
+        // After 30 seconds of inactivity, switch back to VideoActivity
+        val intent = Intent(this@MainActivity, com.example.temiapp.ui.VideoActivity::class.java)
+        startActivity(intent)
+        finish() // Close MainActivity
+    }
+
+
+    // Create a connection to the RabbitMQService
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as RabbitMQService.RabbitBinder
+            var rabbitMQService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            rabbitMQService = null
+            isBound = false
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        robot = Robot.getInstance()
+
         // Initialize RecyclerView
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -55,23 +81,21 @@ class MainActivity : AppCompatActivity() {
         productAdapter = ProductPageAdapter(this, listOf(), hasError = false, dataIsEmpty = false)
         recyclerView.adapter = productAdapter
 
+        hideSystemBars()
+
         // Attach PagerSnapHelper for page-like swiping (3 products per page)
         val snapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(recyclerView)
 
         // Fetch and handle product data
         fetchAndHandleProductsData()
-        // Initialize WebRTCManager with signaling server URL
-        webRTCManager = WebRTCManager(this, "ws://192.168.1.108:8080")
-        webRTCManager.init()
-
-        // Start the WebRTC call automatically
-        webRTCManager.startCall()
+        // Bind to RabbitMQService
+        val intent = Intent(this, RabbitMQService::class.java)
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
 
         // Start the inactivity handler
         handler.postDelayed(inactivityRunnable, inactivityTimeout)
 
-        hideSystemBars()
     }
 
     private fun fetchProductsData(onResult: (Boolean) -> Unit) {
@@ -165,8 +189,30 @@ class MainActivity : AppCompatActivity() {
         handler.postDelayed(inactivityRunnable, inactivityTimeout) // Reset the timer
     }
 
+    override fun onStart() {
+        super.onStart()
+        robot.addOnRobotReadyListener(this)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        // Unbind from the service to avoid leaks
+        if (isBound) {
+            unbindService(serviceConnection)
+            isBound = false
+        }
         handler.removeCallbacks(inactivityRunnable) // Stop the handler when activity is destroyed
+    }
+
+    override fun onRobotReady(isReady: Boolean) {
+        if (isReady) {
+            try {
+                val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)
+                robot.onStart(activityInfo)
+                robot.speak(TtsRequest.create("Temi is ready", false))
+            } catch (e: PackageManager.NameNotFoundException) {
+                throw RuntimeException(e)
+            }
+        }
     }
 }

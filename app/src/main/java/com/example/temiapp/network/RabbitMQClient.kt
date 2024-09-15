@@ -13,8 +13,7 @@ class RabbitMQClient(
     private val port: Int,
     private val username: String,
     private val password: String,
-    private val queueName: String,
-    private val messageHandler: (String) -> Unit // Callback function to handle messages
+    private val queues: Map<String, (String) -> Unit> // Map of queue names to their message handlers
 ) {
 
     private lateinit var connectionFactory: ConnectionFactory
@@ -36,33 +35,29 @@ class RabbitMQClient(
                 }
 
                 connection = connectionFactory.newConnection()
-                if (connection.isOpen) {
-                    Log.d("RabbitMQClient", "Connection established successfully.")
-                } else {
-                    Log.e("RabbitMQClient", "Connection failed to open.")
-                    return@execute
-                }
-
                 channel = connection.createChannel()
 
-                // Declare the queue with appropriate configurations
-                channel.queueDeclare(queueName, false, false, false, mapOf("x-message-ttl" to 300000))
+                // Declare queues and set up consumers for each queue
+                queues.forEach { (queueName, messageHandler) ->
+                    // Declare the queue with appropriate configurations
+                    channel.queueDeclare(queueName, false, false, false, mapOf("x-message-ttl" to 300000))
 
-                val consumer = object : DefaultConsumer(channel) {
-                    override fun handleDelivery(
-                        consumerTag: String?,
-                        envelope: Envelope?,
-                        properties: AMQP.BasicProperties?,
-                        body: ByteArray?
-                    ) {
-                        val message = String(body ?: ByteArray(0), StandardCharsets.UTF_8)
-                        handleRabbitMqMessage(message)
+                    val consumer = object : DefaultConsumer(channel) {
+                        override fun handleDelivery(
+                            consumerTag: String?,
+                            envelope: Envelope?,
+                            properties: AMQP.BasicProperties?,
+                            body: ByteArray?
+                        ) {
+                            val message = String(body ?: ByteArray(0), StandardCharsets.UTF_8)
+                            handleRabbitMqMessage(queueName, message)
+                        }
                     }
-                }
 
-                // Consume messages from the queue
-                channel.basicConsume(queueName, true, consumer)
-                Log.d("RabbitMQClient", "Connected and consuming messages from $queueName")
+                    // Consume messages from the queue
+                    channel.basicConsume(queueName, true, consumer)
+                    Log.d("RabbitMQClient", "Connected and consuming messages from $queueName")
+                }
 
             } catch (e: Exception) {
                 Log.e("RabbitMQClient", "Error connecting to RabbitMQ: ${e.message}", e)
@@ -70,10 +65,11 @@ class RabbitMQClient(
         }
     }
 
-    private fun handleRabbitMqMessage(message: String) {
+    private fun handleRabbitMqMessage(queueName: String, message: String) {
         val handler = Handler(Looper.getMainLooper())
         handler.post {
-            messageHandler(message) // Call the provided handler function with the message
+            // Call the appropriate message handler for the given queue
+            queues[queueName]?.invoke(message)
         }
     }
 

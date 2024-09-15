@@ -28,11 +28,16 @@
         tools:targetApi="31">
 
         <!-- Uncomment the following metadata if you are using Temi SDK -->
-        <!--
+
         <meta-data
             android:name="com.robotemi.sdk.metadata.SKILL"
             android:value="TemiApp" />
-        -->
+
+        <service
+            android:name=".network.RabbitMQService"
+            android:enabled="true"
+            android:exported="false" />
+
 
         <!-- Define activities -->
         <activity android:name=".ui.LoadingActivity" />
@@ -40,7 +45,7 @@
         <activity android:name=".ui.QRCodeActivity" />
 
         <!-- VideoActivity is set as the launcher activity -->
-        <activity android:name=".ui.VideoActivity"
+        <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,7 +54,7 @@
         </activity>
 
         <!-- MainActivity definition -->
-        <activity android:name=".MainActivity" />
+        <activity android:name=".ui.VideoActivity" />
     </application>
 
 </manifest>

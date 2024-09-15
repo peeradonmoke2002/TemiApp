@@ -1,9 +1,12 @@
 package com.example.temiapp.ui
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
@@ -12,14 +15,33 @@ import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.temiapp.MainActivity
 import com.example.temiapp.R
+import com.example.temiapp.network.RabbitMQService
 
 class VideoActivity : AppCompatActivity() {
 
     private lateinit var videoView: VideoView
+    private var rabbitMQService: RabbitMQService? = null
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as RabbitMQService.RabbitBinder
+            rabbitMQService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            rabbitMQService = null
+            isBound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video)
+        // Bind to RabbitMQService
+        val intent = Intent(this, RabbitMQService::class.java)
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
 
         videoView = findViewById(R.id.videoView)
 
@@ -74,5 +96,15 @@ class VideoActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars() // Ensure system bars are hidden when returning to activity
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Unbind from the service
+        if (isBound) {
+            unbindService(serviceConnection)
+            isBound = false
+        }
     }
 }
