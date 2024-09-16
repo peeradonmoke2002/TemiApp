@@ -12,9 +12,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
 
     <application
         android:allowBackup="true"
@@ -37,6 +39,14 @@
             android:name=".network.RabbitMQService"
             android:enabled="true"
             android:exported="false" />
+
+        <service
+            android:name=".network.RTSPStreamingService"
+            android:foregroundServiceType="camera|mediaProjection"
+            android:enabled="true"
+            android:exported="false"/>
+
+
 
 
         <!-- Define activities -->

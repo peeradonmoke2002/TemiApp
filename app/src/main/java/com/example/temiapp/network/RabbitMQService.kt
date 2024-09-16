@@ -36,10 +36,10 @@ class RabbitMQService : Service() {
         )
 
         rabbitMQClient = RabbitMQClient(
-            host = "your_host",
+            host = "10.61.2.10",
             port = 5672,
-            username = "your_username",
-            password = "your_password",
+            username = "admin",
+            password = "123456",
             queues = queueHandlers
         )
 
