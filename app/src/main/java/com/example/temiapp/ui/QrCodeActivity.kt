@@ -1,13 +1,11 @@
 package com.example.temiapp.ui
 
-import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.temiapp.MainActivity
 import com.example.temiapp.R
 import com.example.temiapp.network.RetrofitClient
 import com.example.temiapp.data.ProductApi
@@ -26,17 +24,30 @@ class QRCodeActivity : AppCompatActivity() {
 
         qrCodeImageView = findViewById(R.id.qrCodeImageView)
 
-        // Assume we are passing the product ID to this activity via intent
+        // Fetch product ID from intent
         val productId = intent.getIntExtra("PRODUCT_ID", -1)
 
         if (productId != -1) {
             fetchQrCode(productId)
+        } else {
+            Log.e("QRCodeActivity", "Invalid product ID: $productId")
         }
     }
 
     // Correct method to handle button click for closing the activity
     fun onCloseButtonClick(view: View) {
-        finish()
+        try {
+            Log.d("QRCodeActivity", "Closing QRCodeActivity")
+            setResult(RESULT_OK)  // Set result for returning to the previous activity
+            finish() // Close the activity
+        } catch (e: Exception) {
+            Log.e("QRCodeActivity", "Error during onCloseButtonClick: ${e.localizedMessage}")
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("QRCodeActivity", "Activity Destroyed")
     }
 
     private fun fetchQrCode(productId: Int) {
@@ -45,11 +56,8 @@ class QRCodeActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.isSuccessful) {
                     response.body()?.let { responseBody ->
-                        // Convert the response body to a Bitmap
                         val inputStream = responseBody.byteStream()
                         val bitmap = BitmapFactory.decodeStream(inputStream)
-
-                        // Display the bitmap in the ImageView
                         qrCodeImageView.setImageBitmap(bitmap)
                     }
                 } else {

@@ -16,6 +16,12 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 
     <application
@@ -40,13 +46,12 @@
             android:enabled="true"
             android:exported="false" />
 
+
         <service
-            android:name=".network.RTSPStreamingService"
-            android:foregroundServiceType="camera|mediaProjection"
+            android:name=".network.CameraStreamService"
             android:enabled="true"
-            android:exported="false"/>
-
-
+            android:exported="false"
+            android:foregroundServiceType="camera" />
 
 
         <!-- Define activities -->
