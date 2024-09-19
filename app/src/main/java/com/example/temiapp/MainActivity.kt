@@ -1,46 +1,50 @@
 package com.example.temiapp
 
-import android.Manifest
-import android.content.*
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import android.view.WindowManager
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.example.temiapp.data.Product
 import com.example.temiapp.data.ProductApi
 import com.example.temiapp.network.RabbitMQService
 import com.example.temiapp.network.RetrofitClient
 import com.example.temiapp.ui.ErrorActivity
 import com.example.temiapp.ui.LoadingActivity
 import com.example.temiapp.ui.ProductPageAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.robotemi.sdk.Robot
 import com.robotemi.sdk.TtsRequest
 import com.robotemi.sdk.listeners.OnRobotReadyListener
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+
 
 class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var productAdapter: ProductPageAdapter
-    private lateinit var robot: Robot
-
     private var rabbitMQService: RabbitMQService? = null
     private var isBoundRabbit = false
-    private val handler = Handler(Looper.getMainLooper())
     private val inactivityTimeout: Long = 30000 // 30 seconds timeout
+    private val handler = Handler(Looper.getMainLooper())
     private val inactivityRunnable = Runnable { changeTemiFace() }
+    private var isLoadingScreenActive = false
+
+    private lateinit var robot: Robot
+
 
     private val rabbitMQServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -57,81 +61,118 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         }
     }
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Hide the action bar
+        supportActionBar?.hide()
+        hideSystemBars()
         setContentView(R.layout.activity_main)
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN)
+
+        handler.postDelayed(inactivityRunnable, inactivityTimeout)
 
         // Initialize Temi Robot
         robot = Robot.getInstance()
 
-        hideSystemBars()
-
-        // Start inactivity timeout
-        handler.postDelayed(inactivityRunnable, inactivityTimeout)
 
         // Bind to RabbitMQService
         bindService(Intent(this, RabbitMQService::class.java), rabbitMQServiceConnection, BIND_AUTO_CREATE)
+
+
+        // Setup RecyclerView
+        setupRecyclerView()
+
+        // Fetch and handle product data
+        fetchAndHandleProductsData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemBars() // Ensure the system bars are hidden
     }
 
     private fun setupRecyclerView() {
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
         productAdapter = ProductPageAdapter(this, listOf(), hasError = false, dataIsEmpty = false)
         recyclerView.adapter = productAdapter
 
-        // Attach PagerSnapHelper only if it is not already attached
         if (recyclerView.onFlingListener == null) {
             PagerSnapHelper().attachToRecyclerView(recyclerView)
         }
     }
 
 
+
     private fun fetchProductsData(onResult: (Boolean) -> Unit) {
         val productApi = RetrofitClient.retrofit.create(ProductApi::class.java)
-        productApi.getProductsData().enqueue(object : Callback<List<Product>> {
-            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
-                val products = response.body() ?: listOf()
-                if (products.isEmpty()) {
-                    onResult(false) // Handle empty data case
-                } else {
-                    productAdapter.updateData(products.chunked(3)) // Split into pages of 3 products
-                    onResult(true)
-                }
-            }
 
-            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
-                Toast.makeText(this@MainActivity, "Failed to load products", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    productApi.getProductsData().execute()
+                }
+
+                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                    val products = response.body()!!
+                    productAdapter.updateData(products.chunked(3))
+                    onResult(true)
+                } else {
+                    Log.e("MainActivity", "Failed to fetch products, response: ${response.message()}")
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error fetching products: ${e.localizedMessage}")
                 onResult(false)
             }
-        })
+        }
     }
 
     private fun fetchAndHandleProductsData() {
+        Log.d("MainActivity", "Starting product data fetch")
         startLoadingScreen()
+
         fetchProductsData { isSuccess ->
             runOnUiThread {
-                handler.postDelayed({
-                    if (isSuccess) {
-                        sendBroadcast(Intent(LoadingActivity::class.java.name).apply { action = "finish_loading" })
-                    } else {
-                        showErrorScreen()
-                    }
-                }, 1000)
+                closeLoadingScreen()
+
+                if (isSuccess) {
+                    Log.d("MainActivity", "Product data fetched successfully")
+                } else {
+                    Log.e("MainActivity", "Product data fetch failed, showing error screen")
+                    showErrorScreen()
+                }
             }
         }
     }
 
     private fun startLoadingScreen() {
-        val intent = Intent(this, LoadingActivity::class.java)
-        startActivity(intent)
+        if (!isLoadingScreenActive) {
+            isLoadingScreenActive = true
+            Log.d("MainActivity", "Showing loading screen")
+            val intent = Intent(this, LoadingActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun closeLoadingScreen() {
+        if (isLoadingScreenActive) {
+            isLoadingScreenActive = false
+            Log.d("MainActivity", "Closing loading screen")
+            val finishIntent = Intent("finish_loading_screen")
+            sendBroadcast(finishIntent)
+        }
     }
 
     private fun showErrorScreen() {
-        val intent = Intent(this, ErrorActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        Log.d("MainActivity", "Launching error screen")
+        val intent = Intent(this, ErrorActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
+        finish()
     }
 
     private fun hideSystemBars() {
@@ -148,16 +189,23 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
                             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                     )
         }
+        Log.d("MainActivity", "System bars hidden.")
     }
 
     override fun onUserInteraction() {
         super.onUserInteraction()
+        Log.d("MainActivity", "User interaction detected, resetting inactivity timeout")
         handler.removeCallbacks(inactivityRunnable)
         handler.postDelayed(inactivityRunnable, inactivityTimeout)
     }
 
     private fun changeTemiFace() {
+        Log.d("MainActivity", "changeTemiFace called")
+        handler.removeCallbacks(inactivityRunnable) // Clear any existing callbacks
         startActivity(Intent(this, com.example.temiapp.ui.VideoActivity::class.java))
+    }
+    private fun hideTopBar() {
+        robot.hideTopBar()
     }
 
     override fun onStart() {
@@ -166,26 +214,35 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         robot.addOnRobotReadyListener(this)
         setupRecyclerView()
         fetchAndHandleProductsData()
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
     }
+
 
     override fun onStop() {
-        super.onStop()
-        robot.removeOnRobotReadyListener(this)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
+        Log.e("MainActivity", "onStop called")
         if (isBoundRabbit) {
             unbindService(rabbitMQServiceConnection)
             isBoundRabbit = false
         }
+
+        handler.removeCallbacks(inactivityRunnable) // Clean up
+        super.onStop()
+
+    }
+
+    override fun onDestroy() {
+        Log.e("MainActivity", "onDestroy called")
         handler.removeCallbacks(inactivityRunnable)
+        if (isBoundRabbit) {
+            unbindService(rabbitMQServiceConnection)
+        }
+        super.onDestroy()
     }
-
-    private fun hideTopBar() {
-        robot.hideTopBar()
-    }
-
     override fun onRobotReady(isReady: Boolean) {
         if (isReady) {
             val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)

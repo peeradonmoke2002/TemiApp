@@ -11,11 +11,13 @@ import com.example.temiapp.controller.RobotController
 import com.example.temiapp.ui.LoadingActivity
 import com.robotemi.sdk.Robot
 
+
 class RabbitMQService : Service() {
 
     private lateinit var rabbitMQClient: RabbitMQClient
 
     private val binder = RabbitBinder()
+    private lateinit var robot: Robot
 
     // Binder class to return the instance of RabbitMQService
     inner class RabbitBinder : Binder() {
@@ -36,7 +38,7 @@ class RabbitMQService : Service() {
         )
 
         rabbitMQClient = RabbitMQClient(
-            host = "10.61.2.21",
+            host = "192.168.1.104",
             port = 5672,
             username = "admin",
             password = "123456",
@@ -54,7 +56,6 @@ class RabbitMQService : Service() {
     // Example of handling RabbitMQ messages in the service
     private fun handleRabbitMqMessageController(message: String) {
         Log.d("RabbitMQService", "Received message: $message")
-        // Process the message (e.g., controlling the robot via RobotController)
         val robot = Robot.getInstance()
         val controller = RobotController(robot)
         controller.handleRabbitMqMessage(message)

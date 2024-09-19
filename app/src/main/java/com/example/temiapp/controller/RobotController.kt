@@ -4,8 +4,8 @@ import com.robotemi.sdk.Robot
 import android.os.Handler
 import android.os.Looper
 
-class RobotController(private val robot: Robot) {
 
+class RobotController(private val robot: Robot) {
     private var x = 0f  // Variable to store forward/backward movement
     private var y = 0f  // Variable to store left/right movement
 

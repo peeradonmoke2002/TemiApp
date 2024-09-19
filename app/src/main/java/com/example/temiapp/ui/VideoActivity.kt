@@ -8,13 +8,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.graphics.PixelFormat
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.view.Gravity
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
@@ -27,10 +26,8 @@ import androidx.core.content.ContextCompat
 import com.example.temiapp.MainActivity
 import com.example.temiapp.R
 import com.example.temiapp.network.RabbitMQService
-import com.robotemi.sdk.Robot
-import com.robotemi.sdk.listeners.OnRobotReadyListener
 
-class VideoActivity : AppCompatActivity(), OnRobotReadyListener {
+class VideoActivity : AppCompatActivity() {
 
     // Storage Permissions
     private val REQUEST_EXTERNAL_STORAGE = 1
@@ -39,9 +36,7 @@ class VideoActivity : AppCompatActivity(), OnRobotReadyListener {
         Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
 
-    private lateinit var robot: Robot
     private lateinit var temiface: VideoView
-
     private var rabbitMQService: RabbitMQService? = null
     private var isBound = false
 
@@ -61,6 +56,24 @@ class VideoActivity : AppCompatActivity(), OnRobotReadyListener {
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Hide the action bar for AppCompatActivity
+        supportActionBar?.hide()
+
+        // Enable full-screen mode
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.apply {
+                hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+            )
+        }
+
         setContentView(R.layout.activity_video)
 
         // Request Storage Permissions
@@ -81,7 +94,13 @@ class VideoActivity : AppCompatActivity(), OnRobotReadyListener {
         val uri = Uri.parse("android.resource://$packageName/${R.raw.poomjaibot_eye_face}")
         temiface.setVideoURI(uri)
 
-        temiface.setOnPreparedListener { temiface.start() }
+        // Start the video and enable looping
+        temiface.setOnPreparedListener { mp ->
+            temiface.start()
+            mp.isLooping = true // This makes the video loop continuously
+        }
+
+        // Detect touch to switch back to MainActivity
         temiface.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 changeToMainMenu()
@@ -112,42 +131,9 @@ class VideoActivity : AppCompatActivity(), OnRobotReadyListener {
         finish()
     }
 
-    private fun hideSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.apply {
-                hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                    View.SYSTEM_UI_FLAG_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    )
-        }
-    }
-
-
     override fun onStart() {
         super.onStart()
-        robot = Robot.getInstance()
-        hideSystemBars()
-        robot.hideTopBar()
-    }
-
-    override fun onRobotReady(isReady: Boolean) {
-        if (isReady) {
-            try {
-                val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)
-                robot.onStart(activityInfo)
-            } catch (e: PackageManager.NameNotFoundException) {
-                throw RuntimeException(e)
-            }
-        }
+        Log.e("onStart", "Start")
     }
 
     override fun onPause() {
