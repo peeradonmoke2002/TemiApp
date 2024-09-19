@@ -7,7 +7,10 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:padding="16dp"
+    android:launchMode="singleTop"
+    android:configChanges="orientation|screenSize"
     tools:context=".ui.QRCodeActivity">
+
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/qrCodeImageView"
