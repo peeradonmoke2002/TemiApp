@@ -18,8 +18,8 @@ class RobotController(private val robot: Robot) {
                     stopMovement()
                     return@post
                 }
-                "MOVE_FORWARD_SMART" -> updateMovementValues(0.5f, 0.6f)
-                "MOVE_BACKWARD_SMART" -> updateMovementValues(-0.4f, -0.6f)
+                "MOVE_FORWARD_SMART" -> updateMovementValues(0.3f, 0.4f)
+                "MOVE_BACKWARD_SMART" -> updateMovementValues(-0.3f, -0.4f)
                 "MOVE_LEFT_SMART" -> updateDirectionValues(-1f, 1f)
                 "MOVE_RIGHT_SMART" -> updateDirectionValues(1f, -1f)
 

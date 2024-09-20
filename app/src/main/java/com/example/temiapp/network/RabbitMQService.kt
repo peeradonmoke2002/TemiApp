@@ -38,7 +38,7 @@ class RabbitMQService : Service() {
         // Initialize RabbitMQ client with queue handlers
         val queueHandlers = mapOf(
             "robot_control_queue" to { message: String -> handleRabbitMqMessageController(message) },
-            "store_update_queue" to { message: String -> handleRabbitMqMessage(message) }
+            "store_update_queue" to { message: String -> handleRabbitMqMessageStore(message) }
         )
 
         rabbitMQClient = RabbitMQClient(
@@ -49,8 +49,21 @@ class RabbitMQService : Service() {
             queues = queueHandlers
         )
 
+        // Set up connection listener to detect connection status and reconnect if needed
+        rabbitMQClient.setConnectionListener(object : RabbitMQClient.ConnectionListener {
+            override fun onConnected() {
+                Log.d("RabbitMQService", "RabbitMQ connected")
+            }
+
+            override fun onDisconnected() {
+                Log.e("RabbitMQService", "RabbitMQ disconnected, retrying...")
+                rabbitMQClient.connect() // Reconnect logic
+            }
+        })
+
         rabbitMQClient.connect() // Connect to RabbitMQ
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -67,12 +80,15 @@ class RabbitMQService : Service() {
         controller.handleRabbitMqMessage(message)
     }
 
-    private fun handleRabbitMqMessage(message: String) {
+    private fun handleRabbitMqMessageStore(message: String) {
         Log.d("RabbitMQService", "Received message: $message")
 
         if (message == "UPDATE") {
             Log.d("RabbitMQService", "Received UPDATE command, fetching new product data")
             fetchDataAndUpdateUI()  // Call fetch function
+        }
+        else{
+            Log.d("RabbitMQService", "Received message: $message")
         }
     }
 

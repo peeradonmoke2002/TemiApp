@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -56,7 +57,7 @@ class QRCodeActivity : AppCompatActivity() {
     }
 
     // Correct method to handle button click for closing the activity
-    fun onCloseButtonClick() {
+    fun onCloseButtonClick(view: View) {
         try {
             Log.d("QRCodeActivity", "Closing QRCodeActivity")
             setResult(RESULT_OK)  // Set result for returning to the previous activity

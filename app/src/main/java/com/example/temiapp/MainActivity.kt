@@ -234,18 +234,23 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
     private fun refreshProductList() {
         productRepository.getProductsData { products ->
             if (products != null) {
+                Log.d("MainActivity", "Refreshing product list")
                 // Update data of the existing adapter instead of re-creating the adapter
                 productAdapter.updateData(products.chunked(3))
+                productAdapter.notifyDataSetChanged() // Make sure the RecyclerView reflects the changes
             } else {
                 Log.e("MainActivity", "Failed to fetch products")
             }
         }
     }
 
+
+
     private val productUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            // Refresh the product list when the broadcast is received
+            Log.d("MainActivity", "Received PRODUCT_UPDATED broadcast, refreshing product list")
             refreshProductList()
         }
     }
+
 }

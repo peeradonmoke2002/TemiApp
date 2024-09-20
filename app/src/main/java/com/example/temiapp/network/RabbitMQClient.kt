@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+
+
 class RabbitMQClient(
     private val host: String,
     private val port: Int,
@@ -16,10 +18,21 @@ class RabbitMQClient(
     private val queues: Map<String, (String) -> Unit> // Map of queue names to their message handlers
 ) {
 
+    interface ConnectionListener {
+        fun onConnected()
+        fun onDisconnected()
+    }
+
     private lateinit var connectionFactory: ConnectionFactory
     private lateinit var connection: Connection
     private lateinit var channel: Channel
     private lateinit var executor: ExecutorService
+    private var connectionListener: ConnectionListener? = null  // Add listener
+
+    // Set connection listener
+    fun setConnectionListener(listener: ConnectionListener) {
+        this.connectionListener = listener
+    }
 
     fun connect() {
         executor = Executors.newSingleThreadExecutor()
@@ -36,6 +49,9 @@ class RabbitMQClient(
 
                 connection = connectionFactory.newConnection()
                 channel = connection.createChannel()
+
+                // Notify listener that the connection is successful
+                connectionListener?.onConnected()
 
                 // Declare queues and set up consumers for each queue
                 queues.forEach { (queueName, messageHandler) ->
@@ -61,6 +77,8 @@ class RabbitMQClient(
 
             } catch (e: Exception) {
                 Log.e("RabbitMQClient", "Error connecting to RabbitMQ: ${e.message}", e)
+                // Notify listener of disconnection or failure to connect
+                connectionListener?.onDisconnected()
             }
         }
     }
@@ -82,6 +100,8 @@ class RabbitMQClient(
                 connection.close()
             }
             Log.d("RabbitMQClient", "Disconnected from RabbitMQ")
+            // Notify listener of disconnection
+            connectionListener?.onDisconnected()
         } catch (e: Exception) {
             Log.e("RabbitMQClient", "Error disconnecting from RabbitMQ: ${e.message}", e)
         } finally {
