@@ -4,18 +4,18 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import com.example.temiapp.config.Config
 
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.1.104:3002"
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(2, TimeUnit.SECONDS)  // Reduce the timeout from 60 to 10 seconds
-        .readTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(2, TimeUnit.SECONDS)  // Set connection timeout
+        .readTimeout(5, TimeUnit.SECONDS)     // Set read timeout
         .build()
 
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(Config.apiBaseUrl)  // Dynamically use the API base URL from Config
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

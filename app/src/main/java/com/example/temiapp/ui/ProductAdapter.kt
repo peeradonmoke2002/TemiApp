@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.temiapp.R
 import com.example.temiapp.data.Product
 import com.example.temiapp.data.ProductApi
+import com.example.temiapp.data.ProductRepository
 import com.example.temiapp.network.RetrofitClient
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -28,6 +29,12 @@ class ProductPageAdapter(
     private val hasError: Boolean,                 // Flag to indicate an error
     private val dataIsEmpty: Boolean               // Flag to indicate no data
 ) : RecyclerView.Adapter<ProductPageAdapter.PageViewHolder>() {
+
+    private val productRepository = ProductRepository()
+
+    fun getProductPages(): List<List<Product>> {
+        return productPages
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
         return try {
@@ -166,40 +173,30 @@ class ProductPageAdapter(
             }
         }
 
-        // Fetch product image and bind it to the corresponding ImageView
+
         private fun fetchProductImage(productId: Int, imageView: ImageView) {
-            try {
-                val productApi = RetrofitClient.retrofit.create(ProductApi::class.java)
-                productApi.getProductImage(productId).enqueue(object : Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                        try {
-                            if (response.isSuccessful) {
-                                response.body()?.let { responseBody ->
-                                    val inputStream = responseBody.byteStream()
-                                    val bitmap = BitmapFactory.decodeStream(inputStream)
-
-                                    // Display the bitmap in the ImageView
-                                    imageView.setImageBitmap(bitmap)
-                                }
-                            } else {
-                                // Handle image fetch failure
-                                imageView.setImageResource(R.drawable.placeholder) // Set placeholder if needed
-                            }
-                        } catch (e: Exception) {
-                            Log.e("PageViewHolder", "Error displaying product image: ${e.localizedMessage}")
-                        }
+            // Call the repository's method and handle the image fetching
+            productRepository.getProductImage(productId) { responseBody ->
+                if (responseBody != null) {
+                    try {
+                        val inputStream = responseBody.byteStream()
+                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                        imageView.setImageBitmap(bitmap)
+                        inputStream.close()  // Close the input stream to prevent leaks
+                    } catch (e: Exception) {
+                        Log.e("PageViewHolder", "Error decoding product image: ${e.localizedMessage}")
+                        imageView.setImageResource(R.drawable.placeholder)  // Set a placeholder image in case of error
                     }
-
-                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        Log.e("PageViewHolder", "Failed to fetch product image: ${t.localizedMessage}")
-                        // Handle failure (e.g., show placeholder image)
-                        imageView.setImageResource(R.drawable.placeholder)
-                    }
-                })
-            } catch (e: Exception) {
-                Log.e("PageViewHolder", "Error fetching product image: ${e.localizedMessage}")
+                } else {
+                    Log.e("PageViewHolder", "Failed to fetch image for product ID: $productId")
+                    imageView.setImageResource(R.drawable.placeholder)  // Set placeholder if fetching fails
+                }
             }
         }
+
+
+
+
 
         // Navigate to QRCodeActivity
         private fun showQRCode(productId: Int) {

@@ -11,21 +11,19 @@ import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.temiapp.R
-import com.example.temiapp.network.RetrofitClient
-import com.example.temiapp.data.ProductApi
+import com.example.temiapp.data.ProductRepository
 import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class QRCodeActivity : AppCompatActivity() {
 
     private lateinit var qrCodeImageView: ImageView
+    private lateinit var productRepository: ProductRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         // Hide the action bar for AppCompatActivity
-        supportActionBar?.hide() // No need for `requestWindowFeature(Window.FEATURE_NO_TITLE);` in AppCompatActivity
+        supportActionBar?.hide()
 
         // Enable full-screen mode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -40,15 +38,19 @@ class QRCodeActivity : AppCompatActivity() {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
         }
+
         setContentView(R.layout.activity_qr_code)
 
         qrCodeImageView = findViewById(R.id.qrCodeImageView)
+
+        // Initialize product repository
+        productRepository = ProductRepository()
 
         // Fetch product ID from intent
         val productId = intent.getIntExtra("PRODUCT_ID", -1)
 
         if (productId != -1) {
-            fetchQrCode(productId)
+            fetchQrCodeImage(productId)  // Fetch QR code image
         } else {
             Log.e("QRCodeActivity", "Invalid product ID: $productId")
         }
@@ -59,7 +61,7 @@ class QRCodeActivity : AppCompatActivity() {
         try {
             Log.d("QRCodeActivity", "Closing QRCodeActivity")
             setResult(RESULT_OK)  // Set result for returning to the previous activity
-            finish() // Close the activity
+            finish()  // Close the activity
         } catch (e: Exception) {
             Log.e("QRCodeActivity", "Error during onCloseButtonClick: ${e.localizedMessage}")
         }
@@ -70,24 +72,23 @@ class QRCodeActivity : AppCompatActivity() {
         Log.d("QRCodeActivity", "Activity Destroyed")
     }
 
-    private fun fetchQrCode(productId: Int) {
-        val productApi = RetrofitClient.retrofit.create(ProductApi::class.java)
-        productApi.getQrCodeImage(productId).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                if (response.isSuccessful) {
-                    response.body()?.let { responseBody ->
-                        val inputStream = responseBody.byteStream()
-                        val bitmap = BitmapFactory.decodeStream(inputStream)
-                        qrCodeImageView.setImageBitmap(bitmap)
-                    }
-                } else {
-                    Log.e("QRCodeActivity", "Failed to load QR code: ${response.errorBody()?.string()}")
+    // Fetch the QR code image and display it in the ImageView
+    private fun fetchQrCodeImage(productId: Int) {
+        productRepository.getQrCodeImage(productId) { responseBody ->
+            if (responseBody != null) {
+                try {
+                    val inputStream = responseBody.byteStream()
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    qrCodeImageView.setImageBitmap(bitmap)
+                    inputStream.close()  // Close the input stream to prevent leaks
+                } catch (e: Exception) {
+                    Log.e("QRCodeActivity", "Error decoding QR code image: ${e.localizedMessage}")
+                    qrCodeImageView.setImageResource(R.drawable.placeholder)  // Set a placeholder image in case of error
                 }
+            } else {
+                Log.e("QRCodeActivity", "Failed to fetch QR code for product ID: $productId")
+                qrCodeImageView.setImageResource(R.drawable.placeholder)  // Set placeholder if fetching fails
             }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("QRCodeActivity", "API call failed", t)
-            }
-        })
+        }
     }
 }

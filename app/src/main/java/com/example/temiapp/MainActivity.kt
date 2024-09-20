@@ -1,7 +1,10 @@
 package com.example.temiapp
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
@@ -14,23 +17,17 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.example.temiapp.data.ProductApi
+import com.example.temiapp.data.ProductRepository
 import com.example.temiapp.network.RabbitMQService
-import com.example.temiapp.network.RetrofitClient
 import com.example.temiapp.ui.ErrorActivity
 import com.example.temiapp.ui.LoadingActivity
 import com.example.temiapp.ui.ProductPageAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.robotemi.sdk.Robot
 import com.robotemi.sdk.TtsRequest
 import com.robotemi.sdk.listeners.OnRobotReadyListener
-
 
 class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
@@ -42,9 +39,9 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
     private val handler = Handler(Looper.getMainLooper())
     private val inactivityRunnable = Runnable { changeTemiFace() }
     private var isLoadingScreenActive = false
+    private val productRepository = ProductRepository()
 
     private lateinit var robot: Robot
-
 
     private val rabbitMQServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -61,8 +58,6 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         }
     }
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -73,19 +68,18 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
         handler.postDelayed(inactivityRunnable, inactivityTimeout)
 
-        // Initialize Temi Robot
-        robot = Robot.getInstance()
-
-
         // Bind to RabbitMQService
         bindService(Intent(this, RabbitMQService::class.java), rabbitMQServiceConnection, BIND_AUTO_CREATE)
-
 
         // Setup RecyclerView
         setupRecyclerView()
 
         // Fetch and handle product data
         fetchAndHandleProductsData()
+
+        // Register the BroadcastReceiver without version checks
+        val filter = IntentFilter("PRODUCT_UPDATED")
+        registerReceiver(productUpdateReceiver, filter)
     }
 
     override fun onResume() {
@@ -105,27 +99,13 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         }
     }
 
-
-
     private fun fetchProductsData(onResult: (Boolean) -> Unit) {
-        val productApi = RetrofitClient.retrofit.create(ProductApi::class.java)
-
-        lifecycleScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    productApi.getProductsData().execute()
-                }
-
-                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
-                    val products = response.body()!!
-                    productAdapter.updateData(products.chunked(3))
-                    onResult(true)
-                } else {
-                    Log.e("MainActivity", "Failed to fetch products, response: ${response.message()}")
-                    onResult(false)
-                }
-            } catch (e: Exception) {
-                Log.e("MainActivity", "Error fetching products: ${e.localizedMessage}")
+        productRepository.getProductsData { products ->
+            if (products != null) {
+                productAdapter.updateData(products.chunked(3))
+                onResult(true)
+            } else {
+                Log.e("MainActivity", "Failed to fetch products")
                 onResult(false)
             }
         }
@@ -175,6 +155,32 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         finish()
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        Log.d("MainActivity", "User interaction detected, resetting inactivity timeout")
+        handler.removeCallbacks(inactivityRunnable)
+        handler.postDelayed(inactivityRunnable, inactivityTimeout)
+    }
+
+    private fun changeTemiFace() {
+        Log.d("MainActivity", "changeTemiFace called")
+        handler.removeCallbacks(inactivityRunnable) // Clear any existing callbacks
+        startActivity(Intent(this, com.example.temiapp.ui.VideoActivity::class.java))
+    }
+
+    private fun hideTopBar() {
+        robot.hideTopBar()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Initialize Temi Robot
+        robot = Robot.getInstance()
+        robot.hideTopBar()
+        hideSystemBars() // Call hideSystemBars() directly
+        robot.addOnRobotReadyListener(this)
+    }
+
     private fun hideSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.apply {
@@ -189,39 +195,7 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
                             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                     )
         }
-        Log.d("MainActivity", "System bars hidden.")
     }
-
-    override fun onUserInteraction() {
-        super.onUserInteraction()
-        Log.d("MainActivity", "User interaction detected, resetting inactivity timeout")
-        handler.removeCallbacks(inactivityRunnable)
-        handler.postDelayed(inactivityRunnable, inactivityTimeout)
-    }
-
-    private fun changeTemiFace() {
-        Log.d("MainActivity", "changeTemiFace called")
-        handler.removeCallbacks(inactivityRunnable) // Clear any existing callbacks
-        startActivity(Intent(this, com.example.temiapp.ui.VideoActivity::class.java))
-    }
-    private fun hideTopBar() {
-        robot.hideTopBar()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        hideTopBar()
-        robot.addOnRobotReadyListener(this)
-        setupRecyclerView()
-        fetchAndHandleProductsData()
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-    }
-
 
     override fun onStop() {
         Log.e("MainActivity", "onStop called")
@@ -232,22 +206,49 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
         handler.removeCallbacks(inactivityRunnable) // Clean up
         super.onStop()
-
     }
 
     override fun onDestroy() {
         Log.e("MainActivity", "onDestroy called")
         handler.removeCallbacks(inactivityRunnable)
+
+        // Safely stop RabbitMQ service and unregister BroadcastReceiver
         if (isBoundRabbit) {
             unbindService(rabbitMQServiceConnection)
+            rabbitMQService?.stopRabbitMQ() // Check if not null
         }
+
+        unregisterReceiver(productUpdateReceiver)
         super.onDestroy()
     }
+
     override fun onRobotReady(isReady: Boolean) {
         if (isReady) {
-            val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)
-            robot.onStart(activityInfo)
-            robot.speak(TtsRequest.create("Temi is ready", false))
+            try {
+                val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)
+                robot.onStart(activityInfo)
+                robot.speak(TtsRequest.create("Temi is ready", false))
+            } catch (e: PackageManager.NameNotFoundException) {
+                throw RuntimeException(e)
+            }
+        }
+    }
+
+    private fun refreshProductList() {
+        productRepository.getProductsData { products ->
+            if (products != null) {
+                // Update data of the existing adapter instead of re-creating the adapter
+                productAdapter.updateData(products.chunked(3))
+            } else {
+                Log.e("MainActivity", "Failed to fetch products")
+            }
+        }
+    }
+
+    private val productUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            // Refresh the product list when the broadcast is received
+            refreshProductList()
         }
     }
 }
