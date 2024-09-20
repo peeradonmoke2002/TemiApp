@@ -1,6 +1,5 @@
 package com.example.temiapp.data
 
-import android.util.Log
 import com.example.temiapp.network.RetrofitClient
 import okhttp3.ResponseBody
 import retrofit2.Call

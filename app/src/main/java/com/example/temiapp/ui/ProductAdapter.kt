@@ -11,17 +11,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.temiapp.R
 import com.example.temiapp.data.Product
-import com.example.temiapp.data.ProductApi
 import com.example.temiapp.data.ProductRepository
-import com.example.temiapp.network.RetrofitClient
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class ProductPageAdapter(
     private val context: Context,
@@ -32,9 +25,6 @@ class ProductPageAdapter(
 
     private val productRepository = ProductRepository()
 
-    fun getProductPages(): List<List<Product>> {
-        return productPages
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
         return try {
@@ -110,6 +100,7 @@ class ProductPageAdapter(
         }
 
         // Show "No Data" message in the center
+        @SuppressLint("SetTextI18n")
         fun showNoDataMessage() {
             try {
                 hideAllProducts()
@@ -122,6 +113,7 @@ class ProductPageAdapter(
         }
 
         // Generic product binding method
+        @SuppressLint("SetTextI18n")
         fun bindProduct(product: Product?, productName: TextView, productPrice: TextView, productImage: ImageView, buttonProduct: Button) {
             try {
                 if (product != null) {

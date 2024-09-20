@@ -168,9 +168,6 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         startActivity(Intent(this, com.example.temiapp.ui.VideoActivity::class.java))
     }
 
-    private fun hideTopBar() {
-        robot.hideTopBar()
-    }
 
     override fun onStart() {
         super.onStart()

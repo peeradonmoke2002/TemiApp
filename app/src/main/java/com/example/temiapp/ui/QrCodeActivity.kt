@@ -4,7 +4,6 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -12,7 +11,7 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.temiapp.R
 import com.example.temiapp.data.ProductRepository
-import okhttp3.ResponseBody
+
 
 class QRCodeActivity : AppCompatActivity() {
 
@@ -57,7 +56,7 @@ class QRCodeActivity : AppCompatActivity() {
     }
 
     // Correct method to handle button click for closing the activity
-    fun onCloseButtonClick(view: View) {
+    fun onCloseButtonClick() {
         try {
             Log.d("QRCodeActivity", "Closing QRCodeActivity")
             setResult(RESULT_OK)  // Set result for returning to the previous activity

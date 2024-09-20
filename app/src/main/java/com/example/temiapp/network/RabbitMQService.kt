@@ -62,7 +62,7 @@ class RabbitMQService : Service() {
 
     private fun handleRabbitMqMessageController(message: String) {
         Log.d("RabbitMQService", "Received message: $message")
-        val robot = Robot.getInstance()
+        robot = Robot.getInstance()
         val controller = RobotController(robot)
         controller.handleRabbitMqMessage(message)
     }
