@@ -9,8 +9,8 @@ import com.example.temiapp.config.Config
 object RetrofitClient {
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(2, TimeUnit.SECONDS)  // Set connection timeout
-        .readTimeout(5, TimeUnit.SECONDS)     // Set read timeout
+        .connectTimeout(1, TimeUnit.SECONDS)  // Set connection timeout
+        .readTimeout(1, TimeUnit.SECONDS)     // Set read timeout
         .build()
 
     val retrofit: Retrofit by lazy {

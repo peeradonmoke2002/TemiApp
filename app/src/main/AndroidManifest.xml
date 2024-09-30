@@ -36,11 +36,10 @@
         android:theme="@style/Theme.TemiApp"
         tools:targetApi="31">
 
-        <!-- Uncomment the following metadata if you are using Temi SDK -->
 
         <meta-data
             android:name="com.robotemi.sdk.metadata.SKILL"
-            android:value="TemiApp" />
+            android:value="@string/TemiApp" />
 
         <service
             android:name=".network.RabbitMQService"
@@ -48,17 +47,11 @@
             android:exported="false" />
 
 
-        <service
-            android:name=".network.CameraStreamService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="camera" />
-
-
         <!-- Define activities -->
         <activity android:name=".ui.LoadingActivity" />
         <activity android:name=".ui.ErrorActivity" />
         <activity android:name=".ui.QRCodeActivity" />
+        <activity android:name=".ui.VideoActivity" />
 
         <!-- VideoActivity is set as the launcher activity -->
         <activity android:name=".MainActivity"
@@ -69,8 +62,7 @@
             </intent-filter>
         </activity>
 
-        <!-- MainActivity definition -->
-        <activity android:name=".ui.VideoActivity" />
+
     </application>
 
 </manifest>

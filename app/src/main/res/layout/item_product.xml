@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+
     <!-- Error message TextView (hidden by default) -->
     <TextView
         android:id="@+id/error_message"
@@ -22,15 +23,17 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- First Product -->
+
     <ImageView
         android:id="@+id/product_image1"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         android:contentDescription="@string/product1"
         app:layout_constraintBottom_toTopOf="@id/product_name1"
         app:layout_constraintEnd_toStartOf="@id/product_image2"
-        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintHeight_percent="0.65"
+        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.3" />
@@ -40,49 +43,52 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/product1"
-        android:textSize="48sp"
-        app:layout_constraintBottom_toTopOf="@id/button1"
+        android:text="@string/information1"
+        android:textSize="34sp"
+        app:layout_constraintBottom_toTopOf="@id/product_price1"
         app:layout_constraintEnd_toEndOf="@id/product_image1"
         app:layout_constraintStart_toStartOf="@id/product_image1"
         app:layout_constraintTop_toBottomOf="@id/product_image1" />
+
+    <!-- Product Price TextView -->
 
     <TextView
         android:id="@+id/product_price1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/_0_0_bath"
-        android:textSize="48sp"
+        android:text="@string/Date"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@id/button1"
         app:layout_constraintEnd_toEndOf="@id/product_image1"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@id/product_image1"
         app:layout_constraintTop_toBottomOf="@id/product_name1" />
 
     <Button
         android:id="@+id/button1"
         android:layout_width="0dp"
-        android:layout_height="85dp"
-        android:backgroundTint="@color/purple_500"
-        android:text="@string/purchase"
-        android:textSize="45sp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/orange_500"
+        android:text="@string/more_detail"
+        android:textSize="28sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/product_image1"
         app:layout_constraintStart_toStartOf="@id/product_image1"
         app:layout_constraintTop_toBottomOf="@id/product_price1" />
 
     <!-- Second Product -->
+
     <ImageView
         android:id="@+id/product_image2"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         android:contentDescription="@string/product2"
-        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintBottom_toTopOf="@id/product_name2"
+        app:layout_constraintEnd_toStartOf="@id/product_image3"
+        app:layout_constraintHeight_percent="0.65"
         app:layout_constraintStart_toEndOf="@id/product_image1"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/product_image3"
-        app:layout_constraintBottom_toTopOf="@id/product_name2"
         app:layout_constraintWidth_percent="0.3" />
 
     <TextView
@@ -90,9 +96,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/product2"
-        android:textSize="48sp"
-        app:layout_constraintBottom_toTopOf="@id/button2"
+        android:text="@string/information2"
+        android:textSize="34sp"
+        app:layout_constraintBottom_toTopOf="@id/product_price2"
         app:layout_constraintEnd_toEndOf="@id/product_image2"
         app:layout_constraintStart_toStartOf="@id/product_image2"
         app:layout_constraintTop_toBottomOf="@id/product_image2" />
@@ -102,37 +108,38 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/_0_0_bath"
-        android:textSize="48sp"
+        android:text="@string/Date"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@id/button2"
         app:layout_constraintEnd_toEndOf="@id/product_image2"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@id/product_image2"
         app:layout_constraintTop_toBottomOf="@id/product_name2" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="0dp"
-        android:layout_height="85dp"
-        android:backgroundTint="@color/purple_500"
-        android:text="@string/purchase"
-        android:textSize="45sp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/orange_500"
+        android:text="@string/more_detail"
+        android:textSize="28sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/product_image2"
         app:layout_constraintStart_toStartOf="@id/product_image2"
         app:layout_constraintTop_toBottomOf="@id/product_price2" />
 
     <!-- Third Product -->
+
     <ImageView
         android:id="@+id/product_image3"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
-        app:layout_constraintHeight_percent="0.5"
+        android:layout_margin="8dp"
         android:contentDescription="@string/product3"
+        app:layout_constraintBottom_toTopOf="@id/product_name3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.65"
         app:layout_constraintStart_toEndOf="@id/product_image2"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/product_name3"
         app:layout_constraintWidth_percent="0.3" />
 
     <TextView
@@ -140,9 +147,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/product3"
-        android:textSize="48sp"
-        app:layout_constraintBottom_toTopOf="@id/button3"
+        android:text="@string/information3"
+        android:textSize="34sp"
+        app:layout_constraintBottom_toTopOf="@id/product_price3"
         app:layout_constraintEnd_toEndOf="@id/product_image3"
         app:layout_constraintStart_toStartOf="@id/product_image3"
         app:layout_constraintTop_toBottomOf="@id/product_image3" />
@@ -152,20 +159,20 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/_0_0_bath"
-        android:textSize="48sp"
+        android:text="@string/Date"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@id/button3"
         app:layout_constraintEnd_toEndOf="@id/product_image3"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@id/product_image3"
         app:layout_constraintTop_toBottomOf="@id/product_name3" />
 
     <Button
         android:id="@+id/button3"
         android:layout_width="0dp"
-        android:layout_height="85dp"
-        android:backgroundTint="@color/purple_500"
-        android:text="@string/purchase"
-        android:textSize="45sp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/orange_500"
+        android:text="@string/more_detail"
+        android:textSize="28sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/product_image3"
         app:layout_constraintStart_toStartOf="@id/product_image3"

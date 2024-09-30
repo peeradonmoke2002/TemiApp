@@ -7,6 +7,9 @@
         <item name="android:windowAnimationStyle">@style/FadeTransition</item>
     </style>
 
+
+
+
     <!-- Custom shape for ShapeableImageView with rounded corners -->
     <style name="CustomShape" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>

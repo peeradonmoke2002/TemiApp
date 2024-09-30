@@ -13,17 +13,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import com.example.temiapp.config.Config
+import com.example.temiapp.MainActivity
 
 class RabbitMQService : Service() {
 
+    private lateinit var rabbitMQConnection: RabbitMQConnection
     private lateinit var rabbitMQClient: RabbitMQClient
+    private lateinit var rabbitMQSender: RabbitMQSender
     private val binder = RabbitBinder()
     private lateinit var robot: Robot
+    private var mainActivity: MainActivity? = null
+    private var robotController: RobotController? = null
 
-    // Define CoroutineScope for the service
-    private val serviceScope = CoroutineScope(Dispatchers.Main)
+    // Use Dispatchers.IO for I/O operations
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
 
-    // Binder class to return the instance of RabbitMQService
     inner class RabbitBinder : Binder() {
         fun getService(): RabbitMQService = this@RabbitMQService
     }
@@ -35,21 +39,31 @@ class RabbitMQService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize RabbitMQ client with queue handlers
-        val queueHandlers = mapOf(
-            "robot_control_queue" to { message: String -> handleRabbitMqMessageController(message) },
-            "store_update_queue" to { message: String -> handleRabbitMqMessageStore(message) }
-        )
+        robot = Robot.getInstance()
 
-        rabbitMQClient = RabbitMQClient(
+        // Initialize RabbitMQConnection
+        rabbitMQConnection = RabbitMQConnection(
             host = Config.rabbitMQHost,
             port = Config.rabbitMQPort,
             username = Config.rabbitMQUsername,
-            password = Config.rabbitMQPassword,
+            password = Config.rabbitMQPassword
+        )
+
+        // Initialize RabbitMQSender
+        rabbitMQSender = RabbitMQSender(rabbitMQConnection)
+
+        val queueHandlers = mapOf(
+            "robot_control_queue" to { message: String -> handleRabbitMqMessageController(message) },
+            "store_update_queue" to { message: String -> handleRabbitMqMessageStore(message) },
+            "robot_control_head_queue" to { message: String -> handleRabbitMqHeadMessageController(message) }
+        )
+
+        // Initialize RabbitMQClient using RabbitMQConnection
+        rabbitMQClient = RabbitMQClient(
+            connection = rabbitMQConnection,
             queues = queueHandlers
         )
 
-        // Set up connection listener to detect connection status and reconnect if needed
         rabbitMQClient.setConnectionListener(object : RabbitMQClient.ConnectionListener {
             override fun onConnected() {
                 Log.d("RabbitMQService", "RabbitMQ connected")
@@ -57,27 +71,40 @@ class RabbitMQService : Service() {
 
             override fun onDisconnected() {
                 Log.e("RabbitMQService", "RabbitMQ disconnected, retrying...")
-                rabbitMQClient.connect() // Reconnect logic
+                reconnect()
             }
         })
 
-        rabbitMQClient.connect() // Connect to RabbitMQ
+        // Start consuming messages in a background thread
+        serviceScope.launch {
+            rabbitMQClient.startConsuming()
+        }
     }
 
+    private fun reconnect() {
+        // Retry logic to reconnect to RabbitMQ
+        serviceScope.launch {
+            rabbitMQClient.stopConsuming()
+            rabbitMQClient.startConsuming()
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
-        rabbitMQClient.disconnect() // Disconnect when the service is destroyed
-
-        // Cancel any ongoing coroutines when the service is destroyed
+        rabbitMQClient.stopConsuming()
         serviceScope.cancel()
+    }
+
+    fun setMainActivity(activity: MainActivity) {
+        this.mainActivity = activity
+        robotController = RobotController(robot, mainActivity!!)
     }
 
     private fun handleRabbitMqMessageController(message: String) {
         Log.d("RabbitMQService", "Received message: $message")
-        robot = Robot.getInstance()
-        val controller = RobotController(robot)
-        controller.handleRabbitMqMessage(message)
+
+        robotController?.handleRabbitMqControllMessage(message)
+            ?: Log.e("RabbitMQService", "RobotController is not initialized")
     }
 
     private fun handleRabbitMqMessageStore(message: String) {
@@ -85,25 +112,26 @@ class RabbitMQService : Service() {
 
         if (message == "UPDATE") {
             Log.d("RabbitMQService", "Received UPDATE command, fetching new product data")
-            fetchDataAndUpdateUI()  // Call fetch function
-        }
-        else{
+            fetchDataAndUpdateUI()
+        } else {
             Log.d("RabbitMQService", "Received message: $message")
         }
     }
 
-    // Fetch data and update the UI by broadcasting
+    private fun handleRabbitMqHeadMessageController(message: String) {
+        Log.d("RabbitMQService", "Received message: $message")
+        robotController?.handleRabbitMqHeadControllMessage(message)
+            ?: Log.e("RabbitMQService", "RobotController is not initialized")
+    }
+
     private fun fetchDataAndUpdateUI() {
         val productRepository = ProductRepository()
 
-        // Use the service's CoroutineScope
         serviceScope.launch {
-            // Fetch product data using the repository's asynchronous method
             productRepository.getProductsData { products ->
                 if (products != null) {
-                    // Broadcast the product update, let the UI component handle it
+                    // Broadcast an intent indicating the product data was updated
                     sendBroadcast(Intent("PRODUCT_UPDATED"))
-
                     Log.d("RabbitMQService", "Product data fetched and UI update triggered")
                 } else {
                     Log.e("RabbitMQService", "Failed to fetch product data")
@@ -112,8 +140,19 @@ class RabbitMQService : Service() {
         }
     }
 
-    // Method to stop RabbitMQ connection manually
+    // Expose sendMessage method to other classes (like MainActivity)
+    fun sendMessage(queueName: String, message: String) {
+        serviceScope.launch {
+            try {
+                rabbitMQSender.sendMessage(queueName, message)
+                Log.d("RabbitMQService", "Message sent to $queueName: $message")
+            } catch (e: Exception) {
+                Log.e("RabbitMQService", "Error sending message: ${e.message}", e)
+            }
+        }
+    }
+
     fun stopRabbitMQ() {
-        rabbitMQClient.disconnect()
+        rabbitMQClient.stopConsuming()
     }
 }

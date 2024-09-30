@@ -13,4 +13,6 @@ interface ProductApi {
     fun getQrCodeImage(@Path("id") productId: Int): Call<ResponseBody>
     @GET("/api/productImage/{id}")
     fun getProductImage(@Path("id") productId: Int): Call<ResponseBody>
+    @GET("/api/products/detail/{id}")
+    fun getProductDetail(@Path("id") productId: Int): Call<Product>
 }

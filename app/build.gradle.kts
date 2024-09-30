@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "com.example.temiapp"
         minSdk = 23
-        targetSdk = 30
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
         multiDexEnabled = true
@@ -51,33 +51,19 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.service)
-
-    // ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.4.1")
-    implementation("androidx.media3:media3-exoplayer-rtsp:1.4.1")
-    implementation("androidx.media3:media3-common:1.4.1")
-    implementation(libs.firebase.crashlytics.buildtools)
-
     // Test libraries
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
     // RabbitMQ and WebRTC libraries
     implementation("com.rabbitmq:amqp-client:4.10.0")
-//    implementation("io.getstream:stream-webrtc-android:1.1.3")
-//    implementation("io.getstream:stream-webrtc-android-ui:1.1.3")
-
     // Multidex for support on lower versions
     implementation("androidx.multidex:multidex:2.0.1")
-
     // SLF4J Logging
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("org.slf4j:slf4j-simple:1.7.32")
-
     // Temi SDK (only one implementation should be uncommented)
     implementation("com.robotemi:sdk:1.131.4")
-
     // Retrofit dependencies for API calls
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -90,14 +76,5 @@ dependencies {
     // Material Design
     implementation("com.google.android.material:material:1.11.0")
     implementation("com.arthenica:ffmpeg-kit-full:6.0.LTS")
-    //implementation("com.arthenica:mobile-ffmpeg-full-gpl:4.4.LTS")
-
-    // WebSocket client library
-    implementation("org.java-websocket:Java-WebSocket:1.5.2")
-    // CameraX for capturing camera frames
-    implementation("androidx.camera:camera-core:1.1.0")
-    implementation("androidx.camera:camera-camera2:1.1.0")
-    implementation("androidx.camera:camera-lifecycle:1.1.0")
-
 
 }
