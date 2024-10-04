@@ -160,16 +160,17 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener, OnMovementVeloci
 
     private fun fetchProductsData(onResult: (Boolean) -> Unit) {
         productRepository.getProductsData { products ->
-            // Safely proceed only if products is not null and not empty
-            products?.takeIf { it.isNotEmpty() }?.let {
-                productAdapter.updateData(it.chunked(3))
+            if (!products.isNullOrEmpty()) {
+                Log.d("MainActivity", "Fetched products: ${products.size}")
+                productAdapter.updateData(products.chunked(3))
                 onResult(true)
-            } ?: run {
-                Log.e("MainActivity", "Failed to fetch products")
+            } else {
+                Log.e("MainActivity", "Failed to fetch products, response: $products")
                 onResult(false)
             }
         }
     }
+
 
 
 

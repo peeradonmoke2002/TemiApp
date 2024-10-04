@@ -3,6 +3,12 @@
     <string name="ready_to_move">Ready to Move!</string>
     <string name="close">Close</string>
     <string name="qr_code_image">QR Code Image</string>
+    <string name="purchase">PURCHASE</string>
+    <string name="_0_0_bath">0.0 Bath</string>
+    <string name="product3">Product 3</string>
+    <string name="product2">Product 2</string>
+    <string name="product1">Product 1</string>
+    <string name="todo">TODO</string>
     <string name="TemiApp" />
     <string name="error_connecting_to_server">Error connecting to server</string>
     <string name="retry">Retry</string>

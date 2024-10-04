@@ -23,6 +23,8 @@
         app:shapeAppearanceOverlay="@style/CustomShape" />
 
     <!-- ScrollView wrapping TextView for scrolling content -->
+
+    <!-- Close Button -->
     <ScrollView
         android:id="@+id/detailScrollView"
         android:layout_width="562dp"
@@ -31,6 +33,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/qrCodeImageView"
         app:layout_constraintTop_toTopOf="@+id/qrCodeImageView"
+        app:layout_constraintVertical_bias="1.0"
         app:layout_constraintWidth_percent="0.3">
 
         <!-- Detail Text View inside ScrollView -->
@@ -45,13 +48,12 @@
             tools:ignore="HardcodedText" />
     </ScrollView>
 
-    <!-- Close Button -->
     <Button
         android:id="@+id/closeButton"
         android:layout_width="500dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="40dp"
         android:backgroundTint="@android:color/holo_red_dark"
         android:gravity="center"
         android:onClick="onCloseButtonClick"

@@ -1,6 +1,7 @@
 package com.example.temiapp.ui
 
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
@@ -11,12 +12,15 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.temiapp.R
 import com.example.temiapp.data.ProductRepository
 import com.example.temiapp.utils.Utils
+import com.robotemi.sdk.Robot
+import com.robotemi.sdk.listeners.OnRobotReadyListener
 
-class QRCodeActivity : AppCompatActivity() {
+class QRCodeActivity : AppCompatActivity(), OnRobotReadyListener {
 
     private lateinit var qrCodeImageView: ImageView
     private lateinit var detail: TextView
     private lateinit var productRepository: ProductRepository
+    private lateinit var robot: Robot
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +28,10 @@ class QRCodeActivity : AppCompatActivity() {
         // Hide the action bar for AppCompatActivity
         supportActionBar?.hide()
         Utils.hideSystemBars(window)
+
+        robot = Robot.getInstance()
+        robot.addOnRobotReadyListener(this)
+        robot.hideTopBar()
 
         setContentView(R.layout.activity_qr_code)
 
@@ -43,6 +51,19 @@ class QRCodeActivity : AppCompatActivity() {
         } else {
             Log.e("QRCodeActivity", "Invalid product ID: $productId")
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        robot = Robot.getInstance()
+        robot.addOnRobotReadyListener(this)
+        robot.hideTopBar()
+
+    }
+
+    override fun onStop() {
+        robot.removeOnRobotReadyListener(this)
+        super.onStop()
     }
 
     // Correct method to handle button click for closing the activity
@@ -99,6 +120,17 @@ class QRCodeActivity : AppCompatActivity() {
             } else {
                 Log.e("QRCodeActivity", "Product details not found for product ID: $productId")
                 detail.text = "Error fetching details"
+            }
+        }
+    }
+
+    override fun onRobotReady(isReady: Boolean) {
+        if (isReady) {
+            try {
+                val activityInfo = packageManager.getActivityInfo(componentName, PackageManager.GET_META_DATA)
+                robot.onStart(activityInfo)
+            } catch (e: PackageManager.NameNotFoundException) {
+                throw RuntimeException(e)
             }
         }
     }
