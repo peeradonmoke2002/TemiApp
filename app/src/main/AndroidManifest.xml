@@ -2,9 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Declaring optional camera hardware feature -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
+    <!-- Permissions required by the app -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,18 +36,33 @@
         android:theme="@style/Theme.TemiApp"
         tools:targetApi="31">
 
+
         <meta-data
             android:name="com.robotemi.sdk.metadata.SKILL"
-            android:value="TemiApp" />
+            android:value="@string/TemiApp" />
 
-        <activity
-            android:name=".MainActivity"
+        <service
+            android:name=".network.RabbitMQService"
+            android:enabled="true"
+            android:exported="false" />
+
+
+        <!-- Define activities -->
+        <activity android:name=".ui.LoadingActivity" />
+        <activity android:name=".ui.ErrorActivity" />
+        <activity android:name=".ui.QRCodeActivity" />
+        <activity android:name=".ui.VideoActivity" />
+
+        <!-- VideoActivity is set as the launcher activity -->
+        <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
     </application>
 
 </manifest>
